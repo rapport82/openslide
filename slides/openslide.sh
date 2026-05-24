@@ -83,7 +83,7 @@ run_dev() {
 run_build() {
   log "building static bundle"
   cd "${ROOT_DIR}"
-  pnpm build
+  pnpm exec open-slide build --out-dir "${DIST_DIR}/app"
 }
 
 run_publish() {
@@ -92,6 +92,9 @@ run_publish() {
   run_build
 
   mkdir -p "${DIST_DIR}"
+  if [[ -d "${DIST_DIR}/app/assets" ]]; then
+    cp -R "${DIST_DIR}/app/assets" "${DIST_DIR}/assets"
+  fi
   cp "${INDEX_HTML}" "${DIST_DIR}/index.html"
   while IFS= read -r slug; do
     [[ -n "${slug}" ]] || continue
@@ -119,27 +122,45 @@ from urllib.parse import unquote
 
 port = int(sys.argv[1])
 root = os.getcwd()
-index_path = os.path.join(root, "index.html")
 
 
 class Handler(SimpleHTTPRequestHandler):
+    def serve_file(self, file_path):
+        try:
+            with open(file_path, "rb") as f:
+                data = f.read()
+        except OSError:
+            self.send_error(404, "File not found")
+            return
+
+        self.send_response(200)
+        self.send_header("Content-type", self.guess_type(file_path))
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
     def do_GET(self):
         path = unquote(self.path.split("?", 1)[0].split("#", 1)[0])
         rel = path.lstrip("/")
         fs_path = os.path.join(root, rel)
 
         if os.path.isdir(fs_path):
-          index = os.path.join(fs_path, "index.html")
-          if os.path.exists(index):
-            self.path = path.rstrip("/") + "/index.html"
-            return super().do_GET()
+            index = os.path.join(fs_path, "index.html")
+            if os.path.exists(index):
+                self.path = path.rstrip("/") + "/index.html"
+                return super().do_GET()
 
         if os.path.exists(fs_path):
             return super().do_GET()
 
-        if path.startswith("/s/") or path == "/" or not path.startswith("/assets/"):
-            self.path = "/index.html"
-            return super().do_GET()
+        if path == "/":
+            return self.serve_file(os.path.join(root, "index.html"))
+
+        if path.startswith("/s/"):
+            return self.serve_file(os.path.join(root, "app", "index.html"))
+
+        if not path.startswith("/assets/"):
+            return self.serve_file(os.path.join(root, "index.html"))
 
         self.send_error(404, "File not found")
 
