@@ -631,8 +631,10 @@
 
       const slideHref = (slug) => {
         const encoded = encodeURIComponent(slug);
-        if (location.protocol === 'file:') return `http://localhost:3032/s/${encoded}`;
-        return `/s/${encoded}`;
+        const isFile = location.protocol === 'file:';
+        const isBuiltDist = /\/dist\/index\.html$|\/dist\/?$/.test(location.pathname);
+        const base = isFile && !isBuiltDist ? './dist/' : './';
+        return `${base}${encoded}/`;
       };
 
       const escapeHtml = (value) =>

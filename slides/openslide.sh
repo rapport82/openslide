@@ -44,6 +44,32 @@ list_decks() {
     -print | sed 's#.*/##' | sort
 }
 
+write_deck_wrapper() {
+  local slug="$1"
+  local out_dir="${DIST_DIR}/${slug}"
+  mkdir -p "${out_dir}"
+
+  cat > "${out_dir}/index.html" <<EOF
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${slug}</title>
+    <script>
+      const target = location.protocol === 'file:'
+        ? 'http://localhost:${PORT}/s/${slug}'
+        : '/s/${slug}';
+      location.replace(target);
+    </script>
+  </head>
+  <body>
+    <p>Opening ${slug}...</p>
+  </body>
+</html>
+EOF
+}
+
 ensure_index() {
   [[ -f "${INDEX_HTML}" ]] || die "missing root index.html"
 }
@@ -62,12 +88,18 @@ run_build() {
 
 run_publish() {
   ensure_index
+  rm -rf "${DIST_DIR}"
   run_build
 
   mkdir -p "${DIST_DIR}"
   cp "${INDEX_HTML}" "${DIST_DIR}/index.html"
+  while IFS= read -r slug; do
+    [[ -n "${slug}" ]] || continue
+    write_deck_wrapper "${slug}"
+  done < <(list_decks)
 
   log "copied root index.html to dist/index.html"
+  log "generated slide wrappers in dist/<slide>/index.html"
   log "publish complete"
 }
 
@@ -79,7 +111,44 @@ run_serve() {
 
   log "serving dist/ on http://localhost:${PORT}"
   cd "${DIST_DIR}"
-  python3 -m http.server "${PORT}"
+  python3 - "${PORT}" <<'PY'
+import os
+import sys
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import unquote
+
+port = int(sys.argv[1])
+root = os.getcwd()
+index_path = os.path.join(root, "index.html")
+
+
+class Handler(SimpleHTTPRequestHandler):
+    def do_GET(self):
+        path = unquote(self.path.split("?", 1)[0].split("#", 1)[0])
+        rel = path.lstrip("/")
+        fs_path = os.path.join(root, rel)
+
+        if os.path.isdir(fs_path):
+          index = os.path.join(fs_path, "index.html")
+          if os.path.exists(index):
+            self.path = path.rstrip("/") + "/index.html"
+            return super().do_GET()
+
+        if os.path.exists(fs_path):
+            return super().do_GET()
+
+        if path.startswith("/s/") or path == "/" or not path.startswith("/assets/"):
+            self.path = "/index.html"
+            return super().do_GET()
+
+        self.send_error(404, "File not found")
+
+    def log_message(self, format, *args):
+        return
+
+
+ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
+PY
 }
 
 run_ship() {
