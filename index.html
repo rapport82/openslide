@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="open-slide 발표 아카이브. 새 발표는 아래 목록에 계속 추가할 수 있습니다."
+    />
+    <title>open-slide archive</title>
+    <style>
+      :root {
+        --bg: #f4efe6;
+        --panel: rgba(255, 255, 255, 0.72);
+        --panel-strong: rgba(255, 255, 255, 0.9);
+        --ink: #151311;
+        --muted: #625a52;
+        --line: rgba(21, 19, 17, 0.12);
+        --accent: #1d4ed8;
+        --accent-2: #d97706;
+        --success: #15803d;
+        --shadow: 0 18px 60px rgba(31, 24, 17, 0.11);
+        --radius: 28px;
+        --radius-sm: 18px;
+        --max: 1440px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(29, 78, 216, 0.14), transparent 30%),
+          radial-gradient(circle at 85% 8%, rgba(217, 119, 6, 0.16), transparent 24%),
+          linear-gradient(180deg, #f9f5ee 0%, #f4efe6 52%, #efe6da 100%);
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.18;
+        background-image:
+          linear-gradient(rgba(21, 19, 17, 0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(21, 19, 17, 0.06) 1px, transparent 1px);
+        background-size: 32px 32px;
+        mask-image: radial-gradient(circle at center, black 45%, transparent 92%);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .wrap {
+        position: relative;
+        width: min(var(--max), calc(100% - 64px));
+        margin: 0 auto;
+        padding: 42px 0 56px;
+      }
+
+      .masthead {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.65fr);
+        gap: 24px;
+        align-items: stretch;
+        margin-bottom: 24px;
+      }
+
+      .hero,
+      .meta-panel,
+      .toolbar,
+      .deck,
+      .note {
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .hero {
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.64)),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.4));
+        border-radius: var(--radius);
+        padding: 40px 40px 34px;
+        min-height: 320px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -40px;
+        bottom: -80px;
+        width: 320px;
+        height: 320px;
+        border-radius: 999px;
+        background:
+          radial-gradient(circle at 35% 35%, rgba(29, 78, 216, 0.28), rgba(29, 78, 216, 0.04) 58%, transparent 70%),
+          radial-gradient(circle at 68% 68%, rgba(217, 119, 6, 0.2), transparent 66%);
+        filter: blur(8px);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        width: fit-content;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(21, 19, 17, 0.06);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 0 6px rgba(29, 78, 216, 0.08);
+      }
+
+      h1 {
+        margin: 24px 0 18px;
+        max-width: 9.5ch;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(68px, 7vw, 132px);
+        line-height: 0.92;
+        letter-spacing: -0.08em;
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 760px;
+        font-size: 22px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .hero-actions {
+        margin-top: 28px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 18px;
+        border-radius: 999px;
+        background: rgba(21, 19, 17, 0.08);
+        color: var(--ink);
+        font-size: 15px;
+        font-weight: 650;
+      }
+
+      .pill strong {
+        color: var(--accent);
+      }
+
+      .meta-panel {
+        background: linear-gradient(180deg, rgba(15, 15, 15, 0.96), rgba(32, 25, 19, 0.95));
+        color: #f8f2e8;
+        border-radius: var(--radius);
+        padding: 28px;
+        display: grid;
+        gap: 18px;
+        align-content: start;
+      }
+
+      .meta-panel .label {
+        color: rgba(248, 242, 232, 0.62);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .stat {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 18px;
+      }
+
+      .stat .value {
+        font-size: 32px;
+        font-weight: 850;
+        line-height: 1;
+      }
+
+      .stat .caption {
+        margin-top: 10px;
+        font-size: 14px;
+        color: rgba(248, 242, 232, 0.66);
+        line-height: 1.45;
+      }
+
+      .toolbar {
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 18px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 14px;
+        margin-bottom: 24px;
+        position: sticky;
+        top: 16px;
+        z-index: 20;
+      }
+
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(21, 19, 17, 0.1);
+        border-radius: 18px;
+        padding: 14px 16px;
+      }
+
+      .search svg {
+        flex: none;
+        opacity: 0.6;
+      }
+
+      .search input {
+        width: 100%;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+        font-size: 16px;
+      }
+
+      .search input::placeholder {
+        color: rgba(98, 90, 82, 0.7);
+      }
+
+      .toolbar-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 650;
+        white-space: nowrap;
+      }
+
+      .toolbar-info b {
+        color: var(--ink);
+      }
+
+      .deck-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 22px;
+      }
+
+      .deck {
+        grid-column: span 6;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.64));
+        border-radius: 26px;
+        padding: 28px;
+        min-height: 244px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition:
+          transform 180ms ease,
+          box-shadow 180ms ease,
+          border-color 180ms ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .deck::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto auto 0;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(90deg, var(--deck-accent, var(--accent)), transparent);
+      }
+
+      .deck:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 26px 72px rgba(31, 24, 17, 0.16);
+        border-color: rgba(21, 19, 17, 0.18);
+      }
+
+      .deck-top {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 18px;
+        align-items: start;
+      }
+
+      .deck h2 {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 42px;
+        line-height: 1;
+        letter-spacing: -0.05em;
+      }
+
+      .deck .desc {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.55;
+        max-width: 58ch;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(21, 19, 17, 0.06);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 750;
+        white-space: nowrap;
+      }
+
+      .tag::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--deck-accent, var(--accent));
+      }
+
+      .deck-foot {
+        margin-top: 26px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .chip {
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(21, 19, 17, 0.05);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .open-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: 999px;
+        background: rgba(21, 19, 17, 0.95);
+        color: #fff8ef;
+        font-size: 14px;
+        font-weight: 750;
+        letter-spacing: 0.01em;
+      }
+
+      .open-link svg {
+        transition: transform 160ms ease;
+      }
+
+      .deck:hover .open-link svg {
+        transform: translate(3px, -3px);
+      }
+
+      .deck.is-hidden {
+        display: none;
+      }
+
+      .note {
+        margin-top: 24px;
+        background: var(--panel-strong);
+        border-radius: var(--radius);
+        padding: 20px 24px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.55;
+      }
+
+      .note b {
+        color: var(--ink);
+      }
+
+      .empty {
+        display: none;
+        margin-top: 24px;
+        padding: 40px;
+        border-radius: var(--radius);
+        border: 1px dashed rgba(21, 19, 17, 0.2);
+        background: rgba(255, 255, 255, 0.5);
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.6;
+      }
+
+      .empty strong {
+        color: var(--ink);
+      }
+
+      @media (max-width: 1080px) {
+        .masthead {
+          grid-template-columns: 1fr;
+        }
+
+        .deck {
+          grid-column: span 12;
+        }
+
+        .toolbar {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .wrap {
+          width: min(var(--max), calc(100% - 28px));
+          padding-top: 18px;
+          padding-bottom: 28px;
+        }
+
+        .hero,
+        .meta-panel,
+        .toolbar,
+        .deck,
+        .note,
+        .empty {
+          border-radius: 22px;
+        }
+
+        .hero {
+          min-height: auto;
+          padding: 28px 22px 24px;
+        }
+
+        h1 {
+          font-size: clamp(54px, 17vw, 88px);
+          max-width: 100%;
+        }
+
+        .hero p {
+          font-size: 18px;
+        }
+
+        .meta-panel {
+          padding: 22px;
+        }
+
+        .meta-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .deck {
+          padding: 22px;
+        }
+
+        .deck h2 {
+          font-size: 32px;
+        }
+
+        .deck .desc {
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="masthead">
+        <div class="hero">
+          <div>
+            <div class="eyebrow">Open Slide Archive</div>
+            <h1>발표 목록은 여기서 계속 자라납니다</h1>
+            <p>
+              Git commit과 push만 하면 Vercel이 자동으로 빌드하는, 아주 단단한 발표 목록 페이지입니다.
+              새 덱이 생기면 아래 배열에 한 줄만 추가하면 됩니다.
+            </p>
+          </div>
+
+          <div class="hero-actions" aria-label="빠른 안내">
+            <div class="pill"><strong>1.</strong> 새 발표 추가</div>
+            <div class="pill"><strong>2.</strong> 커밋 & 푸시</div>
+            <div class="pill"><strong>3.</strong> Vercel 자동 빌드</div>
+          </div>
+        </div>
+
+        <aside class="meta-panel">
+          <div class="label">Repository status</div>
+          <div class="meta-grid">
+            <div class="stat">
+              <div class="value" id="deckCount">0</div>
+              <div class="caption">현재 등록된 발표</div>
+            </div>
+            <div class="stat">
+              <div class="value">∞</div>
+              <div class="caption">앞으로 계속 추가 가능</div>
+            </div>
+            <div class="stat">
+              <div class="value">Vercel</div>
+              <div class="caption">Git push 시 자동 배포</div>
+            </div>
+            <div class="stat">
+              <div class="value">SPA</div>
+              <div class="caption">정적 호스팅용 단일 진입점</div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="toolbar" aria-label="발표 검색">
+        <label class="search" for="deckSearch">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M21 21l-4.6-4.6m1.85-5.35a7 7 0 11-14 0 7 7 0 0114 0z"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <input id="deckSearch" type="search" placeholder="발표 제목, 설명, 태그로 검색" autocomplete="off" />
+        </label>
+        <div class="toolbar-info">
+          <span>표시 중:</span>
+          <b id="visibleCount">0</b>
+        </div>
+      </section>
+
+      <section class="deck-grid" id="deckGrid" aria-label="발표 목록"></section>
+      <div class="empty" id="emptyState">
+        <strong>검색 결과가 없습니다.</strong><br />
+        다른 키워드를 넣거나, `decks` 배열에 새 발표를 추가해 보세요.
+      </div>
+
+      <section class="note">
+        <b>추가 방법:</b> 아래 스크립트의 <code>decks</code> 배열에 새 항목을 한 줄만 넣으면 됩니다.
+        <code>slug</code>는 배포된 발표 폴더 이름, <code>title</code>은 카드에 보일 이름입니다.
+      </section>
+    </main>
+
+    <script>
+      const decks = [
+        {
+          title: "Getting Started",
+          slug: "getting-started",
+          description: "open-slide의 기본 사용법과 에디터 흐름을 소개하는 시작용 덱.",
+          date: "2026-05-24",
+          status: "starter",
+          accent: "#1d4ed8",
+          tags: ["onboarding", "guide"],
+        },
+        {
+          title: "Slidev",
+          slug: "slidev",
+          description: "SlideV 실행 스크립트와 publish/ship 흐름을 설명하는 운영용 덱.",
+          date: "2026-05-24",
+          status: "docs",
+          accent: "#d97706",
+          tags: ["workflow", "ops"],
+        },
+        {
+          title: "Test",
+          slug: "test",
+          description: "레이아웃과 페이지 동작을 확인하기 위한 실험용 덱.",
+          date: "2026-05-24",
+          status: "sandbox",
+          accent: "#15803d",
+          tags: ["qa", "experiments"],
+        },
+      ];
+
+      const deckGrid = document.getElementById("deckGrid");
+      const deckCount = document.getElementById("deckCount");
+      const visibleCount = document.getElementById("visibleCount");
+      const deckSearch = document.getElementById("deckSearch");
+      const emptyState = document.getElementById("emptyState");
+
+      const icon = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M7 17L17 7M9 7h8v8" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      `;
+
+      const escapeHtml = (value) =>
+        String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+
+      const render = () => {
+        const query = deckSearch.value.trim().toLowerCase();
+        const filtered = decks.filter((deck) => {
+          const haystack = [
+            deck.title,
+            deck.slug,
+            deck.description,
+            deck.status,
+            ...(deck.tags || []),
+          ]
+            .join(" ")
+            .toLowerCase();
+          return haystack.includes(query);
+        });
+
+        deckCount.textContent = String(decks.length);
+        visibleCount.textContent = String(filtered.length);
+        emptyState.style.display = filtered.length ? "none" : "block";
+
+        deckGrid.innerHTML = filtered
+          .map(
+            (deck) => `
+              <article class="deck" style="--deck-accent: ${deck.accent}">
+                <div class="deck-top">
+                  <div>
+                    <div class="tag">${escapeHtml(deck.status)}</div>
+                    <h2>${escapeHtml(deck.title)}</h2>
+                    <div class="desc">${escapeHtml(deck.description)}</div>
+                  </div>
+                  <div class="chip">${escapeHtml(deck.date)}</div>
+                </div>
+
+                <div class="deck-foot">
+                  <div class="meta-row">
+                    <span class="chip">${escapeHtml(deck.slug)}</span>
+                    ${(deck.tags || [])
+                      .map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`)
+                      .join("")}
+                  </div>
+                  <a class="open-link" href="./${encodeURIComponent(deck.slug)}/">
+                    열기 ${icon}
+                  </a>
+                </div>
+              </article>
+            `
+          )
+          .join("");
+      };
+
+      deckSearch.addEventListener("input", render);
+      render();
+    </script>
+  </body>
+</html>
