@@ -629,6 +629,12 @@
         </svg>
       `;
 
+      const slideHref = (slug) => {
+        const encoded = encodeURIComponent(slug);
+        if (location.protocol === 'file:') return `http://localhost:3032/s/${encoded}`;
+        return `/s/${encoded}`;
+      };
+
       const escapeHtml = (value) =>
         String(value)
           .replaceAll("&", "&amp;")
@@ -676,7 +682,7 @@
                       .map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`)
                       .join("")}
                   </div>
-                  <a class="open-link" href="./${encodeURIComponent(deck.slug)}/">
+                  <a class="open-link" href="${slideHref(deck.slug)}">
                     열기 ${icon}
                   </a>
                 </div>
