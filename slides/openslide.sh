@@ -198,6 +198,13 @@ run_ship() {
   git add -A
 
   if git diff --cached --quiet; then
+    if git rev-list --quiet --count origin/main..HEAD >/dev/null 2>&1 && [[ "$(git rev-list --count origin/main..HEAD)" != "0" ]]; then
+      log "nothing new to commit; pushing existing local commits"
+      git push
+      log "pushed to origin"
+      exit 0
+    fi
+
     log "nothing to commit"
     exit 0
   fi
