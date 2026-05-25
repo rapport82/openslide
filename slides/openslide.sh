@@ -190,6 +190,8 @@ PY
 
 run_ship() {
   local message="${1:-Update slides}"
+  local branch
+  branch="$(git -C "${ROOT_DIR}" branch --show-current)"
 
   ensure_index
   run_publish
@@ -197,10 +199,18 @@ run_ship() {
   cd "${ROOT_DIR}"
   git add -A
 
+  push_current_branch() {
+    if git rev-parse --abbrev-ref --symbolic-full-name "@{u}" >/dev/null 2>&1; then
+      git push
+    else
+      git push --set-upstream origin "${branch}"
+    fi
+  }
+
   if git diff --cached --quiet; then
     if git rev-list --quiet --count origin/main..HEAD >/dev/null 2>&1 && [[ "$(git rev-list --count origin/main..HEAD)" != "0" ]]; then
       log "nothing new to commit; pushing existing local commits"
-      git push
+      push_current_branch
       log "pushed to origin"
       exit 0
     fi
@@ -210,7 +220,7 @@ run_ship() {
   fi
 
   git commit -m "${message}"
-  git push
+  push_current_branch
   log "pushed to origin"
 }
 
