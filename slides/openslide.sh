@@ -172,6 +172,12 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/":
             return self.serve_file(os.path.join(root, "index.html"))
 
+        if path.startswith("/s/assets/"):
+            asset_rel = path[len("/s/"):]
+            asset_path = os.path.join(root, asset_rel)
+            if os.path.exists(asset_path):
+                return self.serve_file(asset_path)
+
         if path.startswith("/s/"):
             return self.serve_file(os.path.join(root, "app", "index.html"))
 
