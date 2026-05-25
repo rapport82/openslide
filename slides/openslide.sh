@@ -80,10 +80,26 @@ run_dev() {
   pnpm dev
 }
 
+filter_chunk_warning() {
+  python3 -c '
+import sys
+
+skip = 0
+for line in sys.stdin:
+    if line.startswith("(!) Some chunks are larger than 500 kB after minification. Consider:"):
+        skip = 3
+        continue
+    if skip:
+        skip -= 1
+        continue
+    sys.stdout.write(line)
+'
+}
+
 run_build() {
   log "building static bundle"
   cd "${ROOT_DIR}"
-  pnpm exec open-slide build --out-dir "${DIST_DIR}/app"
+  pnpm exec open-slide build --out-dir "${DIST_DIR}/app" 2>&1 | filter_chunk_warning
 }
 
 run_publish() {
