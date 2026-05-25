@@ -118,7 +118,31 @@ const styles = `
   }
 `;
 
-const Styles = () => <style>{styles}</style>;
+const staticPreviewStyles = `
+  .sv-fadeUp,
+  .sv-fadeIn,
+  .sv-float,
+  .sv-drift,
+  .sv-pulse,
+  .sv-scan,
+  .sv-lineGrow,
+  .sv-caret::after {
+    animation: none !important;
+  }
+  .sv-fadeUp,
+  .sv-fadeIn,
+  .sv-lineGrow {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+`;
+
+const isStaticPreviewMode = () =>
+  typeof window !== 'undefined' &&
+  window.location.pathname.startsWith('/s/') &&
+  !window.location.pathname.endsWith('/presenter');
+
+const Styles = () => <style>{isStaticPreviewMode() ? `${styles}\n${staticPreviewStyles}` : styles}</style>;
 
 const GridBg = () => (
   <div
@@ -430,7 +454,7 @@ const TypingTerminal = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (containerRef.current?.closest('[data-osd-freeze-motion]')) {
+    if (containerRef.current?.closest('[data-osd-freeze-motion]') || isStaticPreviewMode()) {
       setText(script);
       return;
     }
