@@ -119,21 +119,12 @@ const styles = `
 `;
 
 const staticPreviewStyles = `
-  .sv-fadeUp,
-  .sv-fadeIn,
   .sv-float,
   .sv-drift,
   .sv-pulse,
   .sv-scan,
-  .sv-lineGrow,
   .sv-caret::after {
     animation: none !important;
-  }
-  .sv-fadeUp,
-  .sv-fadeIn,
-  .sv-lineGrow {
-    opacity: 1 !important;
-    transform: none !important;
   }
 `;
 
@@ -454,7 +445,7 @@ const TypingTerminal = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (containerRef.current?.closest('[data-osd-freeze-motion]') || isStaticPreviewMode()) {
+    if (containerRef.current?.closest('[data-osd-freeze-motion]')) {
       setText(script);
       return;
     }
