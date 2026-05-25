@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
 import { useSlidePageNumber } from '@open-slide/core';
 
@@ -427,8 +427,14 @@ const TypingTerminal = ({
 }) => {
   const script = lines.join('\n');
   const [text, setText] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (containerRef.current?.closest('[data-osd-freeze-motion]')) {
+      setText(script);
+      return;
+    }
+
     let alive = true;
     let timer = 0;
     setText('');
@@ -450,6 +456,7 @@ const TypingTerminal = ({
 
   return (
     <div
+      ref={containerRef}
       className={className}
       style={{
         fontFamily: font.mono,
